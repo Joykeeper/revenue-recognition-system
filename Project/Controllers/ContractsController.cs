@@ -40,7 +40,7 @@ public class ContractsControler : ControllerBase
     }
 
     [HttpPut("{id}/pay")]
-    public async Task<IActionResult> DeleteClient([FromRoute] PaymentDto paymentData)
+    public async Task<IActionResult> PayContract([FromRoute] PaymentDto paymentData)
     {
         try
         {

@@ -5,21 +5,20 @@ using Project.Models;
 namespace Project.Models;
 
 
-[Table("Client")]
+[Table("Contract")]
 public class Contract
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public int Id { get; set; }
 
     [Required]
-    public int SellingClientId { get; set; } // Foreign Key
+    public int SellingClientId { get; set; }
 
     [Required]
-    public int BuyingClientId { get; set; } // Foreign Key
+    public int BuyingClientId { get; set; }
 
     [Required]
-    public int SoftwareId { get; set; } // Foreign Key
+    public int SoftwareId { get; set; }
 
     [Required]
     public DateTime StartTime { get; set; }
@@ -28,7 +27,7 @@ public class Contract
 
     [Required]
     [Column(TypeName = "decimal(10,2)")]
-    public decimal Price { get; set; } // DDL specified int, consider decimal for currency in real apps
+    public decimal Price { get; set; }
 
     [Required]
     public int YearsOfUpdates { get; set; }
@@ -38,11 +37,10 @@ public class Contract
     public string SoftwareVersion { get; set; } = string.Empty;
 
     [Required]
-    public bool Signed { get; set; } // DDL smallint, typically maps to bool for 0/1
+    public bool Signed { get; set; }
 
-    public int? DiscountId { get; set; } // Nullable Foreign Key
+    public int? DiscountId { get; set; }
 
-    // Navigation properties
     [ForeignKey("SellingClientId")]
     public Client? SellingClient { get; set; }
 
@@ -53,7 +51,7 @@ public class Contract
     public Software? Software { get; set; }
 
     [ForeignKey("DiscountId")]
-    public Discount? Discount { get; set; } // Nullable navigation property
+    public Discount? Discount { get; set; }
 
     public ICollection<Payment>? Payments { get; set; }
 }

@@ -16,7 +16,7 @@ public class SoftwaresController : ControllerBase
         _dbService = db;
     }
     
-    [HttpGet("{id}")]
+    [HttpGet("{id}/income")]
     public async Task<IActionResult> GetSoftwareIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
         try
@@ -30,7 +30,7 @@ public class SoftwaresController : ControllerBase
         }
     }
     
-    [HttpGet("{id}")]
+    [HttpGet("{id}/expected")]
     public async Task<IActionResult> GetSoftwareExpectedIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
         try

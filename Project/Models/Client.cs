@@ -9,7 +9,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 public class Client
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)] // Prevents EF Core from auto-generating ID, as it will be shared with derived types
     public int Id { get; set; }
 
     [Required]
@@ -22,8 +21,6 @@ public class Client
 
     [Required]
     public int Phone { get; set; }
-
-    // Navigation properties for relationships
     public ICollection<Payment>? Payments { get; set; }
 
     [InverseProperty("SellingClient")]

@@ -5,7 +5,7 @@ using Project.Models;
 namespace Project.Models;
 
 
-[Table("Company")] // Specifies that this class maps to the "Company" table
+[Table("Company")]
 public class Company : Client
 {
     [Required]
@@ -13,5 +13,6 @@ public class Company : Client
     public string Name { get; set; } = string.Empty;
 
     [Required]
-    public int KRS { get; set; }
+    [MaxLength(100)]
+    public string KRS { get; set; }
 }

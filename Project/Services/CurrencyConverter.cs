@@ -88,14 +88,16 @@ public class ExchangeRateService
 }
 
 // Step 3: Your updated CurrencyConverter class
-public class CurrencyConverter
+public class CurrencyConverter : ICurrencyConverter
 {
     private readonly ExchangeRateService _exchangeRateService;
 
     // Constructor to inject the exchange rate service
-    public CurrencyConverter(ExchangeRateService exchangeRateService)
+    public CurrencyConverter()
     {
-        _exchangeRateService = exchangeRateService;
+        string apiKey = "471bc65f5dab827e822266eb";
+
+        _exchangeRateService = new ExchangeRateService(apiKey);
     }
 
     public async Task<double> ConvertFromPLN(decimal amount, string targetCurrency)
@@ -123,39 +125,35 @@ public class CurrencyConverter
     }
 
     // Example of how to use it
-    public static async Task Main(string[] args)
-    {
-        // IMPORTANT: Replace "YOUR_API_KEY" with your actual API key from ExchangeRate-API.com
-        string apiKey = "471bc65f5dab827e822266eb"; // <-- Get your API key here!
-
-        var exchangeRateService = new ExchangeRateService(apiKey);
-        var converter = new CurrencyConverter(exchangeRateService);
-
-        try
-        {
-            decimal plnAmount = 100m;
-            string targetUsd = "USD";
-            double convertedUsd = await converter.ConvertFromPLN(plnAmount, targetUsd);
-            Console.WriteLine($"{plnAmount} PLN is {convertedUsd:F2} {targetUsd}"); // Output: 100 PLN is 25.00 USD (example rate)
-
-            string targetEur = "EUR";
-            double convertedEur = await converter.ConvertFromPLN(plnAmount, targetEur);
-            Console.WriteLine($"{plnAmount} PLN is {convertedEur:F2} {targetEur}");
-
-            string targetPln = "PLN";
-            double convertedPln = await converter.ConvertFromPLN(plnAmount, targetPln);
-            Console.WriteLine($"{plnAmount} PLN is {convertedPln:F2} {targetPln}");
-
-            // Example of an invalid currency (this should throw an error)
-            string invalidCurrency = "XYZ";
-            Console.WriteLine($"Attempting to convert to {invalidCurrency}...");
-            await converter.ConvertFromPLN(plnAmount, invalidCurrency);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"An error occurred in Main: {ex.Message}");
-        }
-
-        Console.ReadLine(); // Keep console open
-    }
+    // public static async Task Main(string[] args)
+    // {
+    //     var converter = new CurrencyConverter();
+    //
+    //     try
+    //     {
+    //         decimal plnAmount = 100m;
+    //         string targetUsd = "USD";
+    //         double convertedUsd = await converter.ConvertFromPLN(plnAmount, targetUsd);
+    //         Console.WriteLine($"{plnAmount} PLN is {convertedUsd:F2} {targetUsd}"); // Output: 100 PLN is 25.00 USD (example rate)
+    //
+    //         string targetEur = "EUR";
+    //         double convertedEur = await converter.ConvertFromPLN(plnAmount, targetEur);
+    //         Console.WriteLine($"{plnAmount} PLN is {convertedEur:F2} {targetEur}");
+    //
+    //         string targetPln = "PLN";
+    //         double convertedPln = await converter.ConvertFromPLN(plnAmount, targetPln);
+    //         Console.WriteLine($"{plnAmount} PLN is {convertedPln:F2} {targetPln}");
+    //
+    //         // Example of an invalid currency (this should throw an error)
+    //         string invalidCurrency = "XYZ";
+    //         Console.WriteLine($"Attempting to convert to {invalidCurrency}...");
+    //         await converter.ConvertFromPLN(plnAmount, invalidCurrency);
+    //     }
+    //     catch (Exception ex)
+    //     {
+    //         Console.WriteLine($"An error occurred in Main: {ex.Message}");
+    //     }
+    //
+    //     Console.ReadLine(); // Keep console open
+    // }
 }

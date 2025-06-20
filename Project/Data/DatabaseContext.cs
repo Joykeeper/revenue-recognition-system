@@ -3,11 +3,6 @@ using Project.Models;
 
 namespace Project.Data;
 
-// --- DbContext ---
-
-/// <summary>
-/// The DbContext for the application, configuring the database schema and relationships.
-/// </summary>
 public class DatabaseContext : DbContext
 {
     public DatabaseContext(DbContextOptions<DatabaseContext> options)
@@ -22,6 +17,8 @@ public class DatabaseContext : DbContext
     public DbSet<Discount> Discounts { get; set; }
     public DbSet<Contract> Contracts { get; set; }
     public DbSet<Payment> Payments { get; set; }
+    public DbSet<Role> Roles { get; set; }
+    public DbSet<User> Users { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,41 +31,52 @@ public class DatabaseContext : DbContext
             .HasOne(c => c.SellingClient)
             .WithMany(cl => cl.ContractsAsSeller)
             .HasForeignKey(c => c.SellingClientId)
-            .OnDelete(DeleteBehavior.NoAction); // Prevents cascade delete to avoid issues if Client is also involved in other relationships
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Contract>()
             .HasOne(c => c.BuyingClient)
             .WithMany(cl => cl.ContractsAsBuyer)
             .HasForeignKey(c => c.BuyingClientId)
-            .OnDelete(DeleteBehavior.NoAction); // Prevents cascade delete
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Contract>()
             .HasOne(c => c.Software)
             .WithMany(o => o.Contracts)
             .HasForeignKey(c => c.SoftwareId)
-            .OnDelete(DeleteBehavior.NoAction); // Prevents cascade delete
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Contract>()
             .HasOne(c => c.Discount)
             .WithMany(d => d.Contracts)
             .HasForeignKey(c => c.DiscountId)
-            .IsRequired(false) // Discount is nullable
-            .OnDelete(DeleteBehavior.SetNull); // Set FK to NULL if Discount is deleted
-
-        // Payment relationships
+            .IsRequired(false)
+            .OnDelete(DeleteBehavior.SetNull);
+        
         modelBuilder.Entity<Payment>()
             .HasOne(p => p.Client)
             .WithMany(cl => cl.Payments)
             .HasForeignKey(p => p.ClientId)
-            .OnDelete(DeleteBehavior.NoAction); // Prevents cascade delete
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<Payment>()
             .HasOne(p => p.Contract)
             .WithMany(c => c.Payments)
             .HasForeignKey(p => p.ContractId)
-            .OnDelete(DeleteBehavior.Cascade); // Payments should be deleted if Contract is deleted
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<User>()
+            .HasOne(u => u.Role)
+            .WithMany(r => r.Users)
+            .HasForeignKey(u => u.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         
         base.OnModelCreating(modelBuilder);
-
+        
+        modelBuilder.Entity<Role>().HasData(
+            new Role { Id = 1, Name = "Admin" },
+            new Role { Id = 2, Name = "User" }
+        );
+        
     }
 }

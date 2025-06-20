@@ -8,7 +8,6 @@ namespace Project.Models;
 public class Payment
 {
     [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.None)]
     public int Id { get; set; }
 
     [Required]

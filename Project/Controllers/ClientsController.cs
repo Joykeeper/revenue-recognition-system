@@ -1,10 +1,12 @@
-﻿using Project.Exceptions;
+﻿using Microsoft.AspNetCore.Authorization;
+using Project.Exceptions;
 using Project.Services;
 using Microsoft.AspNetCore.Mvc;
 using Project.Dtos;
 
-namespace Poprawa.Controllers;
+namespace Project.Controllers;
 
+[Authorize(Roles = "Admin")]
 [Route("api/[controller]")]
 [ApiController]
 public class ClientsController : ControllerBase
@@ -16,6 +18,7 @@ public class ClientsController : ControllerBase
         _dbService = db;
     }
     
+    [Authorize(Roles = "User")]
     [HttpGet("{id}/income")]
     public async Task<IActionResult> GetClientIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
@@ -30,6 +33,7 @@ public class ClientsController : ControllerBase
         }
     }
     
+    [Authorize(Roles = "User")]
     [HttpGet("{id}/expected")]
     public async Task<IActionResult> GetClientExpectedIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
@@ -43,7 +47,7 @@ public class ClientsController : ControllerBase
             return NotFound(e.Message);
         }
     }
-
+    
     [HttpPost]
     public async Task<IActionResult> AddClient([FromBody] NewClientDto data)
     {
