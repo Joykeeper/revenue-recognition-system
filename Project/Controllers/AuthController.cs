@@ -22,36 +22,14 @@ public class AuthenticationController : ControllerBase
     [HttpPost("sign-in")]
     public async Task<IActionResult> SignIn([FromBody] LoginDto loginDetails)
     {
-        try
-        {
-            var tokenString = await _authenticationProvider.AuthenticateUserAsync(loginDetails);
-            return Ok(tokenString);
-        }
-        catch (UnauthorizedAccessException authEx)
-        {
-            return Unauthorized(new { message = authEx.Message });
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, new { message = "An unexpected error occurred during sign-in." });
-        }
+        var tokenString = await _authenticationProvider.AuthenticateUserAsync(loginDetails);
+        return Ok(tokenString);
     }
 
     [HttpPost("sign-up")]
     public async Task<IActionResult> SignUp([FromBody] RegisterUserDto registrationData)
     {
-        try
-        {
-            await _authenticationProvider.RegisterNewUserAsync(registrationData);
-            return Ok(new { message = "Registration completed successfully!" });
-        }
-        catch (ConflictException userExistsEx)
-        {
-            return Conflict(new { message = userExistsEx.Message });
-        }
-        catch (Exception e)
-        {
-            return StatusCode(500, new { message = "An unexpected error occurred during registration." });
-        }
+        await _authenticationProvider.RegisterNewUserAsync(registrationData);
+        return Ok(new { message = "Registration completed successfully!" });
     }
 }

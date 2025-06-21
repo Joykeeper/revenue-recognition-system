@@ -3,12 +3,12 @@ using Project.Exceptions;
 
 namespace Project.Middlewares;
 
-public class ErrorHandlingMiddleware
+public class ExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
-    private readonly ILogger<ErrorHandlingMiddleware> _logger;
+    private readonly ILogger<ExceptionHandlingMiddleware> _logger;
 
-    public ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger)
+    public ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
     {
         _next = next;
         _logger = logger;
@@ -45,7 +45,7 @@ public class ErrorHandlingMiddleware
                 break;
             case BadRequestException:
                 statusCode = (int)HttpStatusCode.BadRequest;
-                message = exception.Message;
+                message = "Bad request access"; //exception.Message;
                 break;
             case UnauthorizedAccessException:
                 statusCode = (int)HttpStatusCode.Unauthorized;

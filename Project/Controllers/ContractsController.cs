@@ -1,10 +1,12 @@
-﻿using Project.Exceptions;
+﻿using Microsoft.AspNetCore.Authorization;
+using Project.Exceptions;
 using Project.Services;
 using Microsoft.AspNetCore.Mvc;
 using Project.Dtos;
 
 namespace Project.Controllers;
 
+[Authorize(Roles = "User")]
 [Route("api/[controller]")]
 [ApiController]
 public class ContractsControler : ControllerBase
@@ -19,45 +21,15 @@ public class ContractsControler : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddContract([FromBody] NewContractDto data)
     {
-        try
-        {
-            await _dbService.CreateContract(data);
-            return Created();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (ConflictException e)
-        {
-            return Conflict(e.Message);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        await _dbService.CreateContract(data);
+        return Created();
     }
 
     [HttpPut("{id}/pay")]
     public async Task<IActionResult> PayContract([FromRoute] PaymentDto paymentData)
     {
-        try
-        {
-            await _dbService.PayContract(paymentData);
-            return Ok();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (ConflictException e)
-        {
-            return Conflict(e.Message);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        await _dbService.PayContract(paymentData);
+        return Ok();
     }
 
 }

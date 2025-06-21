@@ -1,10 +1,12 @@
-﻿using Project.Exceptions;
+﻿using Microsoft.AspNetCore.Authorization;
+using Project.Exceptions;
 using Project.Services;
 using Microsoft.AspNetCore.Mvc;
 using Project.Dtos;
 
 namespace Project.Controllers;
 
+[Authorize(Roles = "User")]
 [Route("api/[controller]")]
 [ApiController]
 public class SoftwaresController : ControllerBase
@@ -19,29 +21,15 @@ public class SoftwaresController : ControllerBase
     [HttpGet("{id}/income")]
     public async Task<IActionResult> GetSoftwareIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
-        try
-        {
-            var income = await _dbService.GetSoftwareIncome(id, currency);
-            return Ok(income);
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var income = await _dbService.GetSoftwareIncome(id, currency);
+        return Ok(income);
     }
     
     [HttpGet("{id}/expected")]
     public async Task<IActionResult> GetSoftwareExpectedIncome([FromRoute] int id, [FromQuery] string currency = "PLN")
     {
-        try
-        {
-            var income = await _dbService.GetSoftwareExpectedIncome(id, currency);
-            return Ok(income);
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
+        var income = await _dbService.GetSoftwareExpectedIncome(id, currency);
+        return Ok(income);
     }
     
 }

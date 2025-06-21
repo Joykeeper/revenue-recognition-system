@@ -51,67 +51,22 @@ public class ClientsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> AddClient([FromBody] NewClientDto data)
     {
-        try
-        {
-            await _dbService.AddClient(data);
-            return Created();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (ConflictException e)
-        {
-            return Conflict(e.Message);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        await _dbService.AddClient(data);
+        return Created();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteClient([FromRoute] int id)
     {
-        try
-        {
-            await _dbService.DeleteClient(id);
-            return Ok();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (ConflictException e)
-        {
-            return Conflict(e.Message);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        await _dbService.DeleteClient(id);
+        return Ok();
     }
     
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateClient([FromRoute] int id,[FromBody] UpdateClientDto data)
     {
-        try
-        {
-            await _dbService.UpdateClient(id, data);
-            return Created();
-        }
-        catch (NotFoundException e)
-        {
-            return NotFound(e.Message);
-        }
-        catch (ConflictException e)
-        {
-            return Conflict(e.Message);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
+        await _dbService.UpdateClient(id, data);
+        return Ok();
     }
 
 }
