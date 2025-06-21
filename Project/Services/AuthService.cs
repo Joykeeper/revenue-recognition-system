@@ -13,14 +13,6 @@ using Project.Exceptions;
 using Project.Models;
 using Project.Services;
 
-// Assuming these are your DTOs and custom exceptions
-// public class LoginRequest { public string Login { get; set; } public string Password { get; set; } }
-// public class RegisterUserRequest { public string Login { get; set; } public string Password { get; set; } public string Email { get; set; } public string Rola { get; set; } }
-// public class User { public int IdUser { get; set; } public string Login { get; set; } public string Password { get; set; } public string Salt { get; set; } public string Email { get; set; } public int IdRola { get; set; } public Rola IdRolaNavigation { get; set; } }
-// public class Rola { public int IdRola { get; set; } public string Nazwa { get; set; } }
-// public class UserExistsException : Exception { public UserExistsException(string message) : base(message) { } }
-// public class UnauthorizedAccessException : Exception { public UnauthorizedAccessException(string message) : base(message) { } }
-
 
 public class AuthService : IAuthService
 {
@@ -73,8 +65,8 @@ public class AuthService : IAuthService
         // Determine user role
         var assignedRole = await _databaseContext.Roles.FirstOrDefaultAsync(r => r.Name == registrationDetails.Role);
         int roleIdToAssign = assignedRole?.Id ?? 2; // Default to role ID 2 (e.g., 'User') if not found
-
-        // Create new user entity
+        
+        
         var newUser = new User
         {
             Login = registrationDetails.Login,
@@ -82,13 +74,8 @@ public class AuthService : IAuthService
             UserSalt = userSalt,
             Email = registrationDetails.Email,
             RoleId = roleIdToAssign,
-            // Assuming IdUser is auto-incremented by the DB or managed elsewhere.
-            // If you truly need to manually assign the max ID + 1, uncomment/re-add this line,
-            // but it's generally discouraged for primary keys in production databases.
-            // IdUser = (await _databaseContext.Users.Select(a => (int?)a.IdUser).MaxAsync() ?? 0) + 1
         };
-
-        // Add to context and save
+        
         await _databaseContext.Users.AddAsync(newUser);
         await _databaseContext.SaveChangesAsync();
     }
@@ -109,7 +96,7 @@ public class AuthService : IAuthService
             Issuer = _appConfiguration["Jwt:Issuer"],
             Audience = _appConfiguration["Jwt:Audience"],
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(60), // Use UtcNow for consistency
+            Expires = DateTime.UtcNow.AddMinutes(60),
             SigningCredentials = credentials
         };
 
@@ -128,7 +115,7 @@ public class AuthService : IAuthService
 
     private static string GenerateRandomSalt()
     {
-        byte[] saltBytes = new byte[16]; // 128 bits / 8 bits per byte = 16 bytes
+        byte[] saltBytes = new byte[16];
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(saltBytes);

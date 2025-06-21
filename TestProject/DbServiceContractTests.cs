@@ -3,6 +3,7 @@ using Project.Data;
 using Project.Dtos;
 using Project.Exceptions;
 using Project.Models;
+using Project.Services;
 
 namespace TestProject;
 
@@ -20,7 +21,7 @@ public class DbServiceContractTests
     public async Task CreateContract_ShouldApplyDiscountsCorrectly()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
 
         context.Softwares.Add(new Software { Id = 1, PriceForYear = 1000 });
         context.Discounts.Add(new Discount
@@ -54,16 +55,16 @@ public class DbServiceContractTests
         // 10% discount = 1800
         // Returning client discount (5%) = 1710
         Assert.NotNull(contract);
-        Assert.Equal(1710, contract.Price, 1); // decimal compare
+        Assert.Equal(1710, contract.Price, 1);
     }
 
     [Theory]
-    [InlineData(2, 1)] // too short
-    [InlineData(31, 1)] // too long
+    [InlineData(2, 1)]
+    [InlineData(31, 1)]
     public async Task CreateContract_ShouldThrowOnInvalidDuration(int days, int years)
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
         context.Softwares.Add(new Software { Id = 1, PriceForYear = 1000 });
         await context.SaveChangesAsync();
 
@@ -85,7 +86,7 @@ public class DbServiceContractTests
     public async Task CreateContract_ShouldThrowOnInvalidSupportYears()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
         context.Softwares.Add(new Software { Id = 1, PriceForYear = 1000 });
         await context.SaveChangesAsync();
 
@@ -107,7 +108,7 @@ public class DbServiceContractTests
     public async Task PayContract_ShouldMarkAsSigned_WhenFullyPaid()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
 
         var contract = new Contract
         {
@@ -140,7 +141,7 @@ public class DbServiceContractTests
     public async Task PayContract_ShouldThrow_WhenPastContractEnd()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
 
         var contract = new Contract
         {
@@ -170,7 +171,7 @@ public class DbServiceContractTests
     public async Task IsContractFullyPaid_ShouldReturnTrue_WhenEnoughPaid()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
 
         var contract = new Contract { Id = 1, Price = 200 };
         context.Contracts.Add(contract);
@@ -188,7 +189,7 @@ public class DbServiceContractTests
     public async Task IsContractFullyPaid_ShouldReturnFalse_WhenInsufficientPayment()
     {
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ContractsService(context);
 
         var contract = new Contract { Id = 1, Price = 300 };
         context.Contracts.Add(contract);

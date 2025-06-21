@@ -9,14 +9,13 @@ namespace Project.Controllers;
 [ApiController]
 public class ContractsControler : ControllerBase
 {
-    private  readonly IDbService _dbService;
+    private  readonly IContractsService _dbService;
 
-    public ContractsControler (IDbService db)
+    public ContractsControler (IContractsService db)
     {
         _dbService = db;
     }
     
-
     [HttpPost]
     public async Task<IActionResult> AddContract([FromBody] NewContractDto data)
     {

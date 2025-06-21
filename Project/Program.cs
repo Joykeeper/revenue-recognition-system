@@ -13,7 +13,9 @@ builder.Services.AddDbContext<DatabaseContext>(options =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddScoped<IDbService, DbService>();
+builder.Services.AddScoped<IContractsService, ContractsService>();
+builder.Services.AddScoped<IClientsService, ClientsService>();
+builder.Services.AddScoped<ISoftwaresService, SoftwaresService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 

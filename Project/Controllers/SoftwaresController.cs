@@ -9,9 +9,9 @@ namespace Project.Controllers;
 [ApiController]
 public class SoftwaresController : ControllerBase
 {
-    private readonly IDbService _dbService;
+    private readonly ISoftwaresService _dbService;
 
-    public SoftwaresController(IDbService db)
+    public SoftwaresController(ISoftwaresService db)
     {
         _dbService = db;
     }

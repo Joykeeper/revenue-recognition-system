@@ -11,9 +11,9 @@ namespace Project.Controllers;
 [ApiController]
 public class ClientsController : ControllerBase
 {
-    private  readonly IDbService _dbService;
+    private  readonly IClientsService _dbService;
 
-    public ClientsController (IDbService db)
+    public ClientsController (IClientsService db)
     {
         _dbService = db;
     }

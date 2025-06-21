@@ -12,13 +12,14 @@ using Newtonsoft.Json;
 using Project.Data;
 using Project.Exceptions;
 using Project.Models;
+using Project.Services;
 using TestProject; // For JSON serialization/deserialization in HttpClient mock
 
-public class IncomeCalculationTests // Renamed for consistency with previous output
+public class IncomeCalculationTests
 {
     private const double AvgPlnToEur = 0.234;
     private const double AvgPlnToUsd = 0.269;
-    private const double TolerancePercentage = 0.02; // +/- 2% tolerance
+    private const double TolerancePercentage = 0.02;
     
     // Helper to get a unique in-memory DbContext for each test
     private DatabaseContext GetInMemoryDbContext()
@@ -49,8 +50,7 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
             });
         return new HttpClient(mockHandler.Object);
     }
-
-    // --- Helper methods for seeding data, consistent with previous extensive tests ---
+    
     private async Task<Software> SeedSoftware(DatabaseContext context, string name)
     {
         var software = new Software { Name = name };
@@ -88,16 +88,12 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         await context.SaveChangesAsync();
     }
 
-
-    // --- Updated Tests ---
-
     [Fact]
     public async Task GetSoftwareExpectedIncome_ShouldReturnCorrectSumForExistingSoftware()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        // TestDbService constructor only takes context now
-        var service = new TestDbService(context);
+
+        var service = new SoftwaresService(context);
 
         var software1 = await SeedSoftware(context, "Software A");
         var software2 = await SeedSoftware(context, "Software B");
@@ -106,34 +102,28 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         await SeedContract(context, software1.Id, 1, 2, 2000m);
         await SeedContract(context, software2.Id, 3, 4, 5000m);
 
-        // Act
+        
         var income = await service.GetSoftwareExpectedIncome(software1.Id, "PLN");
 
-        // Assert
-        Assert.Equal(3000, income); // 1000 + 2000, PLN converts to 1x
+        
+        Assert.Equal(3000, income);
     }
     
     
     [Fact]
     public async Task GetSoftwareExpectedIncome_ShouldThrowNotFoundExceptionForNonExistingSoftware()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var httpClient = CreateMockHttpClient();
-        var service = new TestDbService(context);
-
-        // No software seeded
-
-        // Act & Assert
+        var service = new SoftwaresService(context);
+        
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetSoftwareExpectedIncome(999, "PLN"));
     }
 
     [Fact]
     public async Task GetSoftwareIncome_ShouldReturnSumOfFullyPaidContracts()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new SoftwaresService(context);
 
         var software1 = await SeedSoftware(context, "Software A");
         var client1 = await SeedClient(context, "Client A");
@@ -143,51 +133,40 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         var contract1 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 1000m, signed: true);
         await SeedPayment(context, contract1.Id, 1000m, returned: false);
 
-        // Contract 2: Partially paid
-        var contract2 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 2000m, signed: true);
+        // Contract 2: Partially paid, unsigned
+        var contract2 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 2000m, signed: false);
         await SeedPayment(context, contract2.Id, 1000m, returned: false);
 
-        // Contract 3: Fully paid but with a returned payment (net effect is not fully paid)
-        var contract3 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 1500m, signed: true);
-        await SeedPayment(context, contract3.Id, 1500m, returned: false); // Total paid 1500
-        await SeedPayment(context, contract3.Id, 500m, returned: true);   // 500 returned, effective paid 1000
+        // Contract 3: Fully paid but with a returned payment (net effect is not fully paid), unsigned
+        var contract3 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 1500m, signed: false);
+        await SeedPayment(context, contract3.Id, 1500m, returned: true); // Total paid 1500
 
         // Contract 4: Unsigned (should not contribute to current income at all, regardless of payments)
         var contract4 = await SeedContract(context, software1.Id, client1.Id, client2.Id, 3000m, signed: false);
         await SeedPayment(context, contract4.Id, 3000m, returned: false); // Even if paid, not signed
 
-        // Act
+        
         var result = await service.GetSoftwareIncome(software1.Id, "PLN");
 
-        // Assert
-        // Only contract1 is fully paid (1000) and signed.
-        // contract2 is partially paid (1000 < 2000).
-        // contract3 has effective 1000 paid (1000 < 1500).
-        // contract4 is not signed.
+        
+        // Only contract1 is fully paid (1000) and signed
         Assert.Equal(1000, result);
     }
 
     [Fact]
     public async Task GetSoftwareIncome_ShouldThrowNotFoundExceptionForNonExistingSoftware()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var httpClient = CreateMockHttpClient();
-        var service = new TestDbService(context);
-
-        // No software seeded
-
-        // Act & Assert
+        var service = new SoftwaresService(context);
+        
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetSoftwareIncome(999, "PLN"));
     }
 
     [Fact]
     public async Task GetClientIncome_ShouldReturnSumOfFullyPaidContractsForBuyingClient()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var httpClient = CreateMockHttpClient();
-        var service = new TestDbService(context);
+        var service = new ClientsService(context);
 
         var client1 = await SeedClient(context, "Client 1");
         var client2 = await SeedClient(context, "Client 2");
@@ -205,10 +184,10 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         var contract3 = await SeedContract(context, software.Id, client2.Id, client1.Id, 5000m, signed: true);
         await SeedPayment(context, contract3.Id, 5000m, returned: false);
 
-        // Act
+        
         var result = await service.GetClientIncome(client1.Id, "PLN");
 
-        // Assert
+        
         // Only contract1 contributes for client1's buying income (1000)
         Assert.Equal(1000, result);
     }
@@ -216,52 +195,40 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
     [Fact]
     public async Task GetClientIncome_ShouldThrowNotFoundExceptionForNonExistingClient()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var httpClient = CreateMockHttpClient();
-        var service = new TestDbService(context);
-
-        // No client seeded
-
-        // Act & Assert
+        var service = new ClientsService(context);
+        
+        
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetClientIncome(999, "PLN"));
     }
 
     [Fact]
     public async Task GetClientExpectedIncome_ShouldReturnSumOfContractPricesForSellingClient()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context);
+        var service = new ClientsService(context);
 
         var client1 = await SeedClient(context, "Client 1");
         var client2 = await SeedClient(context, "Client 2");
         var software = await SeedSoftware(context, "Software X");
-
-        // Contracts where Client1 is the SellingClientId
+        
         await SeedContract(context, software.Id, client2.Id, client1.Id, 500m, signed: true);
         await SeedContract(context, software.Id, client2.Id, client1.Id, 1000m, signed: false); // Unsigned still counts for expected
         await SeedContract(context, software.Id, client1.Id, client2.Id, 700m, signed: true); // Client1 is Buying, not Selling
 
-        // Act
+        
         var result = await service.GetClientExpectedIncome(client1.Id, "PLN");
 
-        // Assert
-        // 500 (Sold by Client1) + 1000 (Sold by Client1) = 1500
+        
         Assert.Equal(1500, result);
     }
 
     [Fact]
     public async Task GetClientExpectedIncome_ShouldThrowNotFoundExceptionForNonExistingClient()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var httpClient = CreateMockHttpClient();
-        var service = new TestDbService(context);
-
-        // No client seeded
-
-        // Act & Assert
+        var service = new ClientsService(context);
+        
         await Assert.ThrowsAsync<NotFoundException>(() => service.GetClientExpectedIncome(999, "PLN"));
     }
 
@@ -270,7 +237,7 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
     {
         // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context); // Using real HttpClient
+        var service = new SoftwaresService(context); 
 
         var software1 = await SeedSoftware(context, "Software A");
         await SeedContract(context, software1.Id, 1, 2, 1000m);
@@ -281,10 +248,10 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         double lowerBound = expectedEurAverage * (1 - TolerancePercentage);
         double upperBound = expectedEurAverage * (1 + TolerancePercentage);
 
-        // Act
+        
         var income = await service.GetSoftwareExpectedIncome(software1.Id, "EUR");
 
-        // Assert
+        
         Assert.True(income >= lowerBound && income <= upperBound,
             $"Expected income for EUR to be between {lowerBound:F2} and {upperBound:F2}, but was {income:F2}");
     }
@@ -292,9 +259,8 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
     [Fact]
     public async Task GetSoftwareIncome_ShouldConvertCurrencyWithinRange()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context); // Using real HttpClient
+        var service = new SoftwaresService(context); 
 
         var software1 = await SeedSoftware(context, "Software A");
         var client1 = await SeedClient(context, "Client A");
@@ -311,10 +277,10 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         double lowerBound = expectedEurAverage * (1 - TolerancePercentage);
         double upperBound = expectedEurAverage * (1 + TolerancePercentage);
 
-        // Act
+        
         var income = await service.GetSoftwareIncome(software1.Id, "EUR");
 
-        // Assert
+        
         Assert.True(income >= lowerBound && income <= upperBound,
             $"Expected income for EUR to be between {lowerBound:F2} and {upperBound:F2}, but was {income:F2}");
     }
@@ -323,9 +289,8 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
     [Fact]
     public async Task GetClientIncome_ShouldConvertCurrencyWithinRange()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context); // Using real HttpClient
+        var service = new ClientsService(context); 
 
         var client1 = await SeedClient(context, "Client 1");
         var client2 = await SeedClient(context, "Client 2");
@@ -342,10 +307,10 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         double lowerBound = expectedEurAverage * (1 - TolerancePercentage);
         double upperBound = expectedEurAverage * (1 + TolerancePercentage);
 
-        // Act
+        
         var income = await service.GetClientIncome(client1.Id, "EUR");
 
-        // Assert
+        
         Assert.True(income >= lowerBound && income <= upperBound,
             $"Expected income for EUR to be between {lowerBound:F2} and {upperBound:F2}, but was {income:F2}");
     }
@@ -353,9 +318,8 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
     [Fact]
     public async Task GetClientExpectedIncome_ShouldConvertCurrencyWithinRange()
     {
-        // Arrange
         var context = GetInMemoryDbContext();
-        var service = new TestDbService(context); // Using real HttpClient
+        var service = new ClientsService(context);
 
         var client1 = await SeedClient(context, "Client 1");
         var client2 = await SeedClient(context, "Client 2");
@@ -369,10 +333,10 @@ public class IncomeCalculationTests // Renamed for consistency with previous out
         double lowerBound = expectedEurAverage * (1 - TolerancePercentage);
         double upperBound = expectedEurAverage * (1 + TolerancePercentage);
 
-        // Act
+        
         var income = await service.GetClientExpectedIncome(client1.Id, "EUR");
 
-        // Assert
+        
         Assert.True(income >= lowerBound && income <= upperBound,
             $"Expected income for EUR to be between {lowerBound:F2} and {upperBound:F2}, but was {income:F2}");
     }
